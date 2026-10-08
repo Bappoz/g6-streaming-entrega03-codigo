@@ -1,0 +1,16 @@
+node_modules/
+coverage/
+dist/
+.env
+.env.*
+!.env.example
+
+# Python (benchmark)
+.venv/
+__pycache__/
+.ruff_cache/
+
+# Saída bruta do benchmark; o relatório e os gráficos versionados ficam em benchmark/relatorio/
+benchmark/resultados/*.json
+
+.DS_Store

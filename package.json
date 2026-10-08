@@ -1,0 +1,31 @@
+{
+  "name": "g6-streaming-entrega03-codigo",
+  "version": "0.1.0",
+  "description": "Padrões de Projeto GoF aplicados a uma plataforma de streaming de vídeo — Grupo 06, FGA0208 (UnB), Entrega 03",
+  "scripts": {
+    "test": "vitest run",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test",
+    "demo:builder": "tsx src/criacionais/builder/demo.ts",
+    "demo:factory-method": "tsx src/criacionais/factory-method/demo.ts",
+    "bench": "node --expose-gc --import tsx bench/run.ts"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "private": true
+}
