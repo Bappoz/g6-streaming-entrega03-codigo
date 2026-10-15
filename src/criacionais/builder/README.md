@@ -1,6 +1,6 @@
 # Builder — configuração de transmissão
 
-**Estado:** Product, interface e ConcreteBuilder implementados e testados. Director e `demo.ts` pendentes (escopo do Heitor).
+**Estado:** todos os participantes implementados e testados; `npm run demo:builder` roda a demonstração.
 
 Modelagem e decisão completas no repositório de documentação: [Modelagem — Builder](https://github.com/UnBArqDsw2026-2-Turma01/2026.2-T01-_G6_ProjetoStreamingVideo_Entrega_03/blob/main/docs/Base/Relat%C3%B3rios/1.1.1.SubEquipe_01/1.1.1.1.ModelagemBuilder.md) · [ADR-001](https://github.com/UnBArqDsw2026-2-Turma01/2026.2-T01-_G6_ProjetoStreamingVideo_Entrega_03/blob/main/docs/Base/Relat%C3%B3rios/1.1.1.SubEquipe_01/ADR/ADR-001-builder-stream-config.md).
 
@@ -13,8 +13,8 @@ Modelagem e decisão completas no repositório de documentação: [Modelagem —
 | Product | `StreamConfig` (imutável) | `stream-config.ts` | Lucas |
 | Builder | `StreamConfigBuilder` | `stream-config-builder.ts` | Lucas |
 | ConcreteBuilder | `DefaultStreamConfigBuilder` | `default-stream-config-builder.ts` | Lucas |
-| Director | `StreamConfigDirector` | a implementar | Heitor |
-| Client | `demo.ts` | a implementar | Heitor |
+| Director | `StreamConfigDirector` | `stream-config-director.ts` | Heitor |
+| Client | `demo.ts` | `demo.ts` | Heitor |
 
 Apoio: `enums.ts` (vocabulário de domínio), `video-settings.ts` (perfil de vídeo), `bitrate-floor.ts` (tabela da regra R5), `errors.ts` (`InvalidStreamConfigError`), `index.ts` (API pública do padrão).
 
@@ -24,6 +24,20 @@ Apoio: `enums.ts` (vocabulário de domínio), `video-settings.ts` (perfil de ví
 - **Tudo dentro da pasta do padrão, nada em um `src/dominio/` compartilhado.** A pasta de cada padrão é o escopo de uma dupla. Um módulo comum criado agora seria editado em paralelo pelas duas duplas. Quando o Factory Method precisar de `ContentVisibility`, a promoção é um refactor de uma linha, feito com as duas duplas de acordo.
 - **`index.ts` como fronteira.** Director e demonstração importam daqui; a organização interna pode mudar sem quebrar quem consome.
 - **Testes ao lado do código** (`*.test.ts`), como pede o `CONTRIBUTING.md`.
+
+## Director e presets
+
+`StreamConfigDirector` recebe um `StreamConfigBuilder` (a interface, não a classe concreta) e o reaproveita entre presets (D6). Como `build()` não limpa o estado, todo preset começa com `reset()`; sem isso, um campo definido antes vazaria para a configuração seguinte — um `ULTRA_LOW` esquecido, por exemplo, faria R4 rejeitar o preset 4K.
+
+| Preset | Resolução · fps · bitrate | Latência | Por quê |
+| --- | --- | --- | --- |
+| `lowLatency` | 720p · 30 · 4,5 Mbps | `LOW` | 2160p está fora por R4; 720p é a maior resolução com piso (3 Mbps) que cabe numa rede doméstica comum |
+| `highQuality` | 2160p · 60 · 20 Mbps | `STANDARD` | Única latência que R4 aceita em 4K; acima do piso de 14 Mbps |
+| `mobile` | 480p · 30 · 1 Mbps | `STANDARD` | Em rede móvel, estabilidade vale mais que latência |
+
+Todos os bitrates ficam com folga acima do piso de R5, para que uma revisão de `bitrate-floor.ts` não derrube um preset por poucos kbps. Visibilidade e gravação não fazem parte do preset: são escolhas do criador, e ficam nos padrões do builder.
+
+O Director não valida nada por conta própria: o título vem do cliente e passa pelo mesmo `build()`, então um título vazio sai como `InvalidStreamConfigError` com R1.
 
 ## Regras de validação
 
@@ -52,5 +66,5 @@ No ADR-001, R2 é uma verificação de tempo de execução: `build()` conferiria
 ```bash
 npm run check        # format:check → lint → typecheck → test
 npm run coverage     # testes + cobertura
-npm run demo:builder # pendente: depende do demo.ts (Heitor)
+npm run demo:builder # presets, configuração sob medida e configuração inválida rejeitada
 ```
