@@ -30,6 +30,17 @@ A saída é JSON **bruto**, uma amostra por rodada, em `benchmark/resultados/<ce
 | Checksum acumulado | Impede que o motor elimine código cujo resultado ninguém usa |
 | Ressalvas dentro do JSON (`caveats`) | A ressalva viaja junto com o dado até o relatório |
 
+## Comparar braços com diferença pequena
+
+`run.ts` mede os braços em sequência no mesmo processo, então cada braço herda o estado de JIT, heap e CPU deixado pelo anterior. Para diferenças pequenas, use `bench/isolado.ts`, que mede **um** braço por processo, e compare em pares de ordem sorteada:
+
+```bash
+node --expose-gc --import tsx bench/isolado.ts builder builder-novo
+node --expose-gc --import tsx bench/isolado.ts builder builder-reutilizado
+```
+
+O procedimento completo e um exemplo de leitura estão em [`benchmark/relatorio/analise-builder.md`](../benchmark/relatorio/analise-builder.md).
+
 ## Como acrescentar um cenário
 
 1. Crie `bench/cenarios/<padrao>.ts` exportando um `Scenario`.
