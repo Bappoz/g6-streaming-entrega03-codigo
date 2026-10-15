@@ -10,4 +10,5 @@ export { ContentVisibility, LatencyMode, Resolution } from "./enums";
 export { InvalidStreamConfigError } from "./errors";
 export { StreamConfig } from "./stream-config";
 export type { StreamConfigBuilder } from "./stream-config-builder";
+export { StreamConfigDirector } from "./stream-config-director";
 export type { VideoSettings } from "./video-settings";
