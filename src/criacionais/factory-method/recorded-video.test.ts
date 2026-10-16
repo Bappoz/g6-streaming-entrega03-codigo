@@ -98,6 +98,12 @@ describe("RecordedVideo (ConcreteProduct)", () => {
       );
     });
 
+    it("recusa availableAt inválido", () => {
+      expect(() =>
+        newRecording().markReady({ ...READY, availableAt: new Date(Number.NaN) }),
+      ).toThrow("F3 availableAt deve ser uma data válida");
+    });
+
     it("recusa concluir duas vezes", () => {
       const video = newRecording();
       video.markReady(READY);

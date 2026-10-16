@@ -87,8 +87,10 @@ export class RecordedVideo extends UserContent {
   /**
    * Conclui o processamento — regra F3 (regra 9 do v3).
    *
-   * `READY` exige duração positiva, `storageUri` e `availableAt`; sem eles a gravação não
-   * pode servir de origem para clipes (a regra F5 compara o recorte com a duração).
+   * A nota do v3 exige duração, `storageUri`, `availableAt` e manifesto para `READY`. Aqui
+   * são verificados os três primeiros; exigir duração **positiva** e data **válida** é
+   * refinamento desta entrega, não texto literal da nota. O manifesto (`MediaManifest`,
+   * DE08) não é representado: a entrega de mídia está fora do escopo do padrão de criação.
    *
    * @throws {ContentRuleViolationError} F3, se faltar algum dado ou a gravação não estiver em processamento.
    */
@@ -104,6 +106,10 @@ export class RecordedVideo extends UserContent {
     }
     if (ready.storageUri.trim() === "") {
       throw new ContentRuleViolationError("F3", "storageUri é obrigatório para READY");
+    }
+    // `Date` garante o tipo, não a validade: `new Date(NaN)` também é um `Date`.
+    if (Number.isNaN(ready.availableAt.getTime())) {
+      throw new ContentRuleViolationError("F3", "availableAt deve ser uma data válida");
     }
     this.processing = ProcessingStatus.READY;
     this.duration = ready.durationSeconds;
