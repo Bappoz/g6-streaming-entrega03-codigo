@@ -133,6 +133,23 @@ describe("UserContentCreator (Creator)", () => {
     expect(repository.size).toBe(0);
   });
 
+  it("se a moderação falha, o erro sobe e o conteúdo fica registrado como PENDING", () => {
+    const repository = new InMemoryContentRepository();
+    const failingPolicy: PolicyService = {
+      moderate: () => {
+        throw new Error("serviço de moderação indisponível");
+      },
+    };
+
+    expect(() =>
+      newCreator(repository, failingPolicy).submit({ title: "Conteúdo", ready: true }),
+    ).toThrow("serviço de moderação indisponível");
+
+    const registrado = repository.findContentById("id-fixo");
+    expect(registrado?.moderationStatus).toBe(ModerationResult.PENDING);
+    expect(registrado?.isPublished()).toBe(false);
+  });
+
   it("gera UUID e usa o relógio do sistema quando não recebe id nem relógio", () => {
     const content = new FakeCreator({
       repository: new InMemoryContentRepository(),

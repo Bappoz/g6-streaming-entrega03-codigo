@@ -61,6 +61,13 @@ export abstract class UserContentCreator<TInput, TContent extends UserContent> {
    *
    * Erros de regra do método-fábrica (`ContentRuleViolationError`) atravessam sem ser
    * capturados, e nada é persistido nesse caso.
+   *
+   * **Falha depois do primeiro `save`.** Se a política ou o segundo `save` lançar erro, o
+   * erro sobe sem ser tratado e o conteúdo fica registrado como estava no primeiro `save`:
+   * moderação `PENDING`, fora do ar. É um estado válido do modelo (conteúdo aguardando
+   * moderação), não um objeto pela metade, e pode ser moderado de novo pelo id. Não há
+   * transação: quem repetir o `submit` cria **outro** conteúdo. Essa é a consequência
+   * declarada da ordem `save → moderate → save` imposta pela assinatura do v3.
    */
   submit(input: TInput): TContent {
     const content = this.createContent(input);
