@@ -28,8 +28,16 @@ import type { Scenario } from "../measure";
  * indireção do padrão — chamada ao método-fábrica e acesso aos colaboradores pelo Creator.
  *
  * O repositório do cenário guarda só o último conteúdo salvo. Com o repositório em
- * memória da demo, cada iteração acrescentaria um clipe ao `Map` e a busca da gravação
- * ficaria mais lenta a cada rodada, medindo o crescimento do mapa em vez do padrão.
+ * memória da demo, cada iteração acrescentaria um clipe ao `Map`: a memória retida e o
+ * trabalho do coletor de lixo cresceriam rodada a rodada, e a medida misturaria esse
+ * crescimento com o custo do padrão. O repositório falso mede a indireção neste cenário;
+ * não representa o custo de uma persistência real.
+ *
+ * Cada braço tem **estado próprio** (repositório, política e contador de ids), criado por
+ * `newArmState()`. Com estado compartilhado, o segundo braço começaria com ids maiores e
+ * herdaria o último conteúdo salvo pelo primeiro — diferenças pequenas, mas do tamanho do
+ * que este cenário tenta medir. Para comparar os braços, prefira `bench/isolado.ts`, um
+ * braço por processo, em ordem alternada.
  */
 
 const SOURCE_STREAM_ID = "live-bench";
@@ -86,14 +94,21 @@ const REQUEST: ClipRequestInput = {
   title: "Recorte de referência",
 };
 
-const repository = new LastSavedRepository(newReadyRecording());
-const policy = new BlocklistPolicyService(repository, ["spoiler"]);
-const fixedNow = new Date(0);
-let sequence = 0;
-const newId = (): string => `clip-${++sequence}`;
-const now = (): Date => fixedNow;
+const FIXED_NOW = new Date(0);
 
-const creator = new ClipCreator({ repository, policy, newId, now });
+/** Estado independente de um braço: nenhum braço herda ids ou conteúdo do outro. */
+function newArmState() {
+  const repository = new LastSavedRepository(newReadyRecording());
+  const policy = new BlocklistPolicyService(repository, ["spoiler"]);
+  let sequence = 0;
+  const newId = (): string => `clip-${++sequence}`;
+  const now = (): Date => FIXED_NOW;
+  return { repository, policy, newId, now };
+}
+
+const patternArm = newArmState();
+const creator = new ClipCreator(patternArm);
+const manualArm = newArmState();
 
 export const factoryMethodScenario: Scenario = {
   name: "factory-method",
@@ -101,7 +116,8 @@ export const factoryMethodScenario: Scenario = {
     "Criação e registro de Clip pelo ClipCreator (Factory Method) contra os mesmos passos escritos em linha com new Clip.",
   caveats: [
     "Os dois braços executam as mesmas regras (F4 e F5 no construtor de Clip), a mesma moderação e as mesmas duas gravações no repositório; a diferença medida é a indireção do padrão.",
-    "O repositório guarda só o último conteúdo salvo, para o custo por iteração não crescer com o número de clipes.",
+    "O repositório guarda só o último conteúdo salvo, para a memória retida não crescer com o número de clipes; não representa o custo de uma persistência real.",
+    "Cada braço tem repositório, política e contador de ids próprios; para diferenças pequenas, comparar com bench/isolado.ts em ordem alternada.",
     "Medida de memória só é válida quando environment.gcAvailable é true (node --expose-gc).",
   ],
   arms: [
@@ -114,6 +130,7 @@ export const factoryMethodScenario: Scenario = {
       name: "manual",
       description: "Mesmos passos em linha: busca da gravação, new Clip, save, moderate, publish.",
       run: () => {
+        const { repository, policy, newId, now } = manualArm;
         const source = repository.findRecordingByStream(REQUEST.sourceStreamId);
         if (source === undefined) {
           throw new Error("gravação de referência ausente");

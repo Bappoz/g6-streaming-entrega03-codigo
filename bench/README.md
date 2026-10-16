@@ -63,4 +63,4 @@ Dois braços: `factory-method` (`ClipCreator.submit`, com a operação no Creato
 
 **Diferença em relação ao cenário do Builder:** aqui o braço manual **não** pula validação. As regras F4 e F5 moram no construtor de `Clip`, então os dois braços as executam, e a moderação e as duas gravações no repositório também são as mesmas. A diferença medida é só a indireção do padrão.
 
-O cenário usa um repositório que guarda só o último conteúdo salvo: com o repositório em memória da demo, o mapa cresceria a cada iteração e a busca da gravação ficaria mais lenta rodada a rodada, medindo o crescimento do mapa em vez do padrão.
+O cenário usa um repositório que guarda só o último conteúdo salvo: com o repositório em memória da demo, o mapa cresceria a cada iteração, e a memória retida e o trabalho do coletor de lixo entrariam na medida junto com o padrão. O repositório falso mede a indireção; não representa uma persistência real. Cada braço tem repositório, política e contador de ids próprios, para nenhum herdar estado do outro.
