@@ -5,8 +5,8 @@ import { ContentRuleViolationError } from "./errors";
 import { LiveStream } from "./live-stream";
 import { RecordedVideo } from "./recorded-video";
 
-function newLiveStream(recordAutomatically = true): LiveStream {
-  return new LiveStream({
+function newLiveStream(recordAutomatically = true, ended = true): LiveStream {
+  const live = new LiveStream({
     id: "live-1",
     ownerId: "criadora",
     title: "Live de sábado",
@@ -16,6 +16,11 @@ function newLiveStream(recordAutomatically = true): LiveStream {
     latencyMode: LatencyMode.STANDARD,
     recordAutomatically,
   });
+  if (ended) {
+    live.markLive();
+    live.finish();
+  }
+  return live;
 }
 
 function newRecording(source = newLiveStream()): RecordedVideo {
@@ -51,6 +56,12 @@ describe("RecordedVideo (ConcreteProduct)", () => {
     expect(video.storageUri).toBeUndefined();
     expect(video.availableAt).toBeUndefined();
     expect(video.viewCount).toBe(0);
+  });
+
+  it("recusa gravação de live que ainda não terminou com F2 (máquina M4 da Entrega 02)", () => {
+    expect(() => newRecording(newLiveStream(true, false))).toThrow(
+      "F2 a transmissão live-1 ainda não terminou (CREATED); a gravação nasce do encerramento",
+    );
   });
 
   it("recusa gravação de live sem gravação automática com F2", () => {

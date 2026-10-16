@@ -45,6 +45,8 @@ function newReadyRecording(): RecordedVideo {
     latencyMode: LatencyMode.STANDARD,
     recordAutomatically: true,
   });
+  live.markLive();
+  live.finish();
   const recording = new RecordedVideo({ id: "video-bench", createdAt: new Date(0), source: live });
   recording.markReady({
     durationSeconds: 3600,

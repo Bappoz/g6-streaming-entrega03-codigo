@@ -15,7 +15,7 @@ function setup() {
 }
 
 function newLiveStream(recordAutomatically = true): LiveStream {
-  return new LiveStream({
+  const live = new LiveStream({
     id: "live-1",
     ownerId: "criadora",
     title: "Live de sábado",
@@ -25,6 +25,11 @@ function newLiveStream(recordAutomatically = true): LiveStream {
     latencyMode: LatencyMode.STANDARD,
     recordAutomatically,
   });
+  if (recordAutomatically) {
+    live.markLive();
+    live.finish();
+  }
+  return live;
 }
 
 describe("RecordedVideoCreator (ConcreteCreator)", () => {
@@ -50,6 +55,17 @@ describe("RecordedVideoCreator (ConcreteCreator)", () => {
     expect(video.processingStatus).toBe(ProcessingStatus.PROCESSING);
     expect(video.moderationStatus).toBe(ModerationResult.APPROVED);
     expect(video.isPublished()).toBe(false);
+  });
+
+  it("recusa segunda gravação da mesma transmissão com F2", () => {
+    const { repository, creator } = setup();
+    repository.save(newLiveStream());
+    creator.submit({ streamId: "live-1" });
+
+    expect(() => creator.submit({ streamId: "live-1" })).toThrow(
+      "F2 a transmissão live-1 já tem gravação",
+    );
+    expect(repository.size).toBe(2);
   });
 
   it("recusa transmissão inexistente com F2", () => {

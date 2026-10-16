@@ -16,6 +16,8 @@ function newRecording(ready = true): RecordedVideo {
     latencyMode: LatencyMode.STANDARD,
     recordAutomatically: true,
   });
+  live.markLive();
+  live.finish();
   const video = new RecordedVideo({ id: "video-1", createdAt: new Date(), source: live });
   if (ready) {
     video.markReady({

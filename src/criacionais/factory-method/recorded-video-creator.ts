@@ -21,7 +21,11 @@ export interface RecordingInput {
  * publicada depois de `markReady()` (evento `RecordingAvailable`, decisão DE05).
  */
 export class RecordedVideoCreator extends UserContentCreator<RecordingInput, RecordedVideo> {
-  /** @throws {ContentRuleViolationError} F2, se a transmissão não existe ou não grava. */
+  /**
+   * @throws {ContentRuleViolationError} F2, se a transmissão não existe, não grava, não
+   * terminou ou já tem gravação. Uma gravação por transmissão: com duas, a busca por
+   * transmissão do `ClipCreator` poderia achar a que falhou e recusar um recorte válido.
+   */
   protected override createContent(input: RecordingInput): RecordedVideo {
     const source = this.repository.findContentById(input.streamId);
     if (!(source instanceof LiveStream)) {
@@ -29,6 +33,9 @@ export class RecordedVideoCreator extends UserContentCreator<RecordingInput, Rec
         "F2",
         `não existe transmissão ${input.streamId} para originar a gravação`,
       );
+    }
+    if (this.repository.findRecordingByStream(source.id) !== undefined) {
+      throw new ContentRuleViolationError("F2", `a transmissão ${source.id} já tem gravação`);
     }
     return new RecordedVideo({ id: this.nextId(), createdAt: this.currentTime(), source });
   }

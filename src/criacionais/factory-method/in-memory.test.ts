@@ -35,6 +35,8 @@ describe("InMemoryContentRepository", () => {
     const repository = new InMemoryContentRepository();
     const live = newLiveStream("live-1");
     const outra = newLiveStream("live-2");
+    live.markLive();
+    live.finish();
     const video = new RecordedVideo({ id: "video-1", createdAt: new Date(), source: live });
     repository.save(live);
     repository.save(outra);

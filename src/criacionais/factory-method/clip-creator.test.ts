@@ -21,6 +21,8 @@ function setup({ ready = true, withRecording = true, blockedTerms = [] as string
   });
   repository.save(live);
   if (withRecording) {
+    live.markLive();
+    live.finish();
     const video = new RecordedVideo({ id: "video-1", createdAt: new Date(), source: live });
     if (ready) {
       video.markReady({

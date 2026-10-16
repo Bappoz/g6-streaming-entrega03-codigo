@@ -1,4 +1,4 @@
-import { ProcessingStatus } from "./enums";
+import { LiveStreamStatus, ProcessingStatus } from "./enums";
 import { ContentRuleViolationError } from "./errors";
 import type { LiveStream } from "./live-stream";
 import { UserContent } from "./user-content";
@@ -24,6 +24,9 @@ export interface RecordedVideoFields {
  * ("preservar o proprietário da origem") seja garantida pela construção: dono, título e
  * visibilidade vêm da live, sem chance de o chamador passar um dono diferente.
  *
+ * Só nasce de live encerrada (`ENDED`): na máquina de estados M4 da Entrega 02, a gravação
+ * entra em processamento a partir do encerramento da transmissão.
+ *
  * Nasce em `PROCESSING` — é o que `MediaProcessingService.persistRecording` devolve no
  * v3 —, e só fica pronta com `markReady()`, quando o evento `RecordingAvailable` chega
  * (decisão DE05). Até lá a mídia não está pronta e a gravação não pode ser publicada.
@@ -42,6 +45,13 @@ export class RecordedVideo extends UserContent {
       throw new ContentRuleViolationError(
         "F2",
         `a transmissão ${fields.source.id} não tem gravação automática habilitada`,
+      );
+    }
+    // Ainda F2: a gravação nasce do encerramento (máquina M4 da Entrega 02).
+    if (fields.source.status !== LiveStreamStatus.ENDED) {
+      throw new ContentRuleViolationError(
+        "F2",
+        `a transmissão ${fields.source.id} ainda não terminou (${fields.source.status}); a gravação nasce do encerramento`,
       );
     }
     super({
