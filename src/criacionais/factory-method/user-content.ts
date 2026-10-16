@@ -32,7 +32,7 @@ export abstract class UserContent {
   readonly ownerId: string;
   readonly title: string;
   readonly visibility: ContentVisibility;
-  readonly createdAt: Date;
+  private readonly created: Date;
   private publication = PublicationStatus.UNPUBLISHED;
   private moderation = ModerationResult.PENDING;
 
@@ -46,7 +46,13 @@ export abstract class UserContent {
     this.ownerId = fields.ownerId;
     this.title = fields.title.trim();
     this.visibility = fields.visibility;
-    this.createdAt = fields.createdAt;
+    // Cópia: `readonly` impede reatribuir, não `setTime()` no objeto que veio de fora.
+    this.created = new Date(fields.createdAt.getTime());
+  }
+
+  /** Instante de criação; devolve uma cópia, pelo mesmo motivo do construtor. */
+  get createdAt(): Date {
+    return new Date(this.created.getTime());
   }
 
   get publicationStatus(): PublicationStatus {

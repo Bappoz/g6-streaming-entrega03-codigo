@@ -77,7 +77,7 @@ describe("UserContentCreator (Creator)", () => {
 
     expect(content).toBeInstanceOf(FakeContent);
     expect(content.id).toBe("id-fixo");
-    expect(content.createdAt).toBe(FIXED_NOW);
+    expect(content.createdAt).toEqual(FIXED_NOW);
   });
 
   it("persiste antes de moderar, porque a política recebe só o id (diagrama v3)", () => {

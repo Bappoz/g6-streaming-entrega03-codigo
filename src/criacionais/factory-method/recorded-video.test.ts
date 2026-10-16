@@ -80,7 +80,8 @@ describe("RecordedVideo (ConcreteProduct)", () => {
       expect(video.isReady()).toBe(true);
       expect(video.durationSeconds).toBe(7200);
       expect(video.storageUri).toBe("storage://gravacoes/video-1");
-      expect(video.availableAt).toBe(READY.availableAt);
+      expect(video.availableAt).toEqual(READY.availableAt);
+      expect(video.availableAt).not.toBe(READY.availableAt);
     });
 
     it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(

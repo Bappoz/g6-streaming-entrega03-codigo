@@ -37,11 +37,24 @@ describe("LiveStream (ConcreteProduct)", () => {
 
     live.markLive(inicio);
     expect(live.status).toBe(LiveStreamStatus.LIVE);
-    expect(live.startedAt).toBe(inicio);
+    expect(live.startedAt).toEqual(inicio);
 
     live.finish(fim);
     expect(live.status).toBe(LiveStreamStatus.ENDED);
-    expect(live.endedAt).toBe(fim);
+    expect(live.endedAt).toEqual(fim);
+  });
+
+  it("não compartilha as datas com quem chama: alterar o Date de fora não muda a live", () => {
+    const live = newLiveStream();
+    const inicio = new Date("2026-10-16T20:00:00Z");
+    live.markLive(inicio);
+
+    inicio.setFullYear(2000);
+    live.startedAt?.setFullYear(1999);
+    live.createdAt.setFullYear(1998);
+
+    expect(live.startedAt).toEqual(new Date("2026-10-16T20:00:00Z"));
+    expect(live.createdAt).toEqual(new Date("2026-10-16T12:00:00Z"));
   });
 
   it("usa o instante atual quando nenhum é informado", () => {

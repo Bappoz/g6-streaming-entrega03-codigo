@@ -43,11 +43,11 @@ export class LiveStream extends UserContent {
   }
 
   get startedAt(): Date | undefined {
-    return this.started;
+    return this.started === undefined ? undefined : new Date(this.started.getTime());
   }
 
   get endedAt(): Date | undefined {
-    return this.ended;
+    return this.ended === undefined ? undefined : new Date(this.ended.getTime());
   }
 
   /** Motivo da falha, quando `status` é `FAILED`. */
@@ -58,7 +58,7 @@ export class LiveStream extends UserContent {
   markLive(at: Date = new Date()): void {
     this.requireStatus("markLive", LiveStreamStatus.CREATED);
     this.currentStatus = LiveStreamStatus.LIVE;
-    this.started = at;
+    this.started = new Date(at.getTime());
   }
 
   /**
@@ -68,7 +68,7 @@ export class LiveStream extends UserContent {
   finish(at: Date = new Date()): void {
     this.requireStatus("finish", LiveStreamStatus.LIVE);
     this.currentStatus = LiveStreamStatus.ENDED;
-    this.ended = at;
+    this.ended = new Date(at.getTime());
     this.unpublish();
   }
 

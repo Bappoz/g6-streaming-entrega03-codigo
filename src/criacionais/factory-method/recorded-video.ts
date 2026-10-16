@@ -77,7 +77,7 @@ export class RecordedVideo extends UserContent {
   }
 
   get availableAt(): Date | undefined {
-    return this.available;
+    return this.available === undefined ? undefined : new Date(this.available.getTime());
   }
 
   get viewCount(): number {
@@ -114,7 +114,7 @@ export class RecordedVideo extends UserContent {
     this.processing = ProcessingStatus.READY;
     this.duration = ready.durationSeconds;
     this.storage = ready.storageUri;
-    this.available = ready.availableAt;
+    this.available = new Date(ready.availableAt.getTime());
   }
 
   /**
