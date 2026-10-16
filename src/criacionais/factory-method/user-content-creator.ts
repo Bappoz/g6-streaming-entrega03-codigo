@@ -26,11 +26,14 @@ export interface CreatorDependencies {
  * método-fábrica de cada ConcreteCreator. É a definição do GoF: "deixar as subclasses
  * decidirem qual classe instanciar".
  *
- * **Desvio declarado em relação ao livro.** No GoF, `FactoryMethod()` não recebe
+ * **Adaptação declarada em relação ao livro.** No GoF, `FactoryMethod()` não recebe
  * parâmetros. Aqui cada tipo precisa de entradas diferentes (uma `StreamConfig`, o id de
  * uma transmissão, um pedido de recorte), então o Creator é genérico na entrada: `TInput`.
- * O GoF prevê essa variação como "métodos-fábrica parametrizados"; o parâmetro não escolhe
- * a classe — a subclasse continua sendo quem decide.
+ * É uma adaptação tipada, e não a variante de "métodos-fábrica parametrizados" do GoF, em
+ * que o parâmetro identifica qual produto criar: aqui o parâmetro só carrega dados, e quem
+ * decide a classe continua sendo a subclasse. Como cada criador tem a sua entrada, eles
+ * não são intercambiáveis entre si; o que é comum a todos é `submit` e o retorno
+ * `UserContent`.
  *
  * @typeParam TInput Dados de que o ConcreteCreator precisa para criar o conteúdo.
  * @typeParam TContent ConcreteProduct criado; o Client pode enxergá-lo só como `UserContent`.
