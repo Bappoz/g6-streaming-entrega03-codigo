@@ -18,7 +18,9 @@ export interface LiveStreamFields extends UserContentFields {
  * ar esconderia um defeito do chamador.
  *
  * Mídia pronta (regra 8 do v3) significa estar no ar: uma live criada e ainda não
- * iniciada não tem o que exibir, e uma encerrada passa a ser exibida pela gravação.
+ * iniciada não tem o que exibir, e uma encerrada passa a ser exibida pela gravação. Por
+ * isso `finish()` e `fail()` também despublicam: a regra F6 vale enquanto o conteúdo está
+ * publicado, não só no instante de publicar.
  */
 export class LiveStream extends UserContent {
   readonly channelId: string;
@@ -59,16 +61,23 @@ export class LiveStream extends UserContent {
     this.started = at;
   }
 
+  /**
+   * Encerra a transmissão e a tira do ar: depois do fim, a mídia deixa de estar pronta e
+   * a regra F6 deixa de valer. Quem passa a ser exibida é a gravação.
+   */
   finish(at: Date = new Date()): void {
     this.requireStatus("finish", LiveStreamStatus.LIVE);
     this.currentStatus = LiveStreamStatus.ENDED;
     this.ended = at;
+    this.unpublish();
   }
 
+  /** Registra a falha e tira a transmissão do ar, pelo mesmo motivo de `finish()`. */
   fail(reason: string): void {
     this.requireStatus("fail", LiveStreamStatus.CREATED, LiveStreamStatus.LIVE);
     this.currentStatus = LiveStreamStatus.FAILED;
     this.failure = reason;
+    this.unpublish();
   }
 
   override isMediaReady(): boolean {

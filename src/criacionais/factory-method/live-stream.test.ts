@@ -99,4 +99,19 @@ describe("LiveStream (ConcreteProduct)", () => {
     live.finish();
     expect(live.isMediaReady()).toBe(false);
   });
+
+  it.each([
+    ["finish()", (l: LiveStream) => l.finish()],
+    ["fail()", (l: LiveStream) => l.fail("encoder desconectado")],
+  ])("%s tira do ar a live que estava publicada (F6 vale enquanto publicada)", (_, end) => {
+    const live = newLiveStream();
+    live.applyModeration(ModerationResult.APPROVED);
+    live.markLive();
+    live.publish();
+
+    end(live);
+
+    expect(live.isPublished()).toBe(false);
+    expect(live.moderationStatus).toBe(ModerationResult.APPROVED);
+  });
 });
