@@ -47,7 +47,7 @@ Cada mensagem de erro começa pelo id da regra, o elo entre a falha no terminal 
 | Id | Regra | Origem | Onde vive |
 | --- | --- | --- | --- |
 | F1 | Título não vazio | Decisão de projeto (simétrica à R1) | construtor de `UserContent` |
-| F2 | Gravação só nasce de transmissão existente, encerrada (`ENDED`) e com gravação automática; uma gravação por transmissão | Regra 2 da nota "Regras do fluxo de clipes" (v3) e máquina M4 da Entrega 02; unicidade é decisão de projeto | `RecordedVideoCreator` (existência, unicidade) e construtor de `RecordedVideo` |
+| F2 | Gravação só nasce de transmissão existente, encerrada (`ENDED`) e com gravação automática; uma gravação vigente por transmissão (a que falhou não conta e pode ser substituída) | Regra 2 da nota "Regras do fluxo de clipes" (v3) e máquina M4 da Entrega 02; unicidade é decisão de projeto | `RecordedVideoCreator` (existência, unicidade), construtor de `RecordedVideo` e `ContentRepository.findRecordingByStream` (ignora `FAILED`) |
 | F3 | `READY` exige duração, `storageUri` e `availableAt` | Regra 9 (v3), sem o manifesto; duração positiva e data válida são refinamentos | `RecordedVideo.markReady` |
 | F4 | Clipe só nasce de gravação `READY` da transmissão | Regra 1 (v3) | `ClipCreator` (existência) e construtor de `Clip` |
 | F5 | `0 ≤ início < fim ≤ duração da gravação` | Regra 4 (v3) | construtor de `Clip` |

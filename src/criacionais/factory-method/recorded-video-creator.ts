@@ -23,8 +23,13 @@ export interface RecordingInput {
 export class RecordedVideoCreator extends UserContentCreator<RecordingInput, RecordedVideo> {
   /**
    * @throws {ContentRuleViolationError} F2, se a transmissão não existe, não grava, não
-   * terminou ou já tem gravação. Uma gravação por transmissão: com duas, a busca por
-   * transmissão do `ClipCreator` poderia achar a que falhou e recusar um recorte válido.
+   * terminou ou já tem gravação vigente. Uma gravação vigente por transmissão: com duas,
+   * a busca por transmissão do `ClipCreator` não teria como escolher a que recortar.
+   *
+   * A gravação que falhou não conta como vigente (`findRecordingByStream` a ignora). Se
+   * contasse, uma falha no processamento deixaria a transmissão sem gravação e sem clipes
+   * para sempre; assim, uma nova gravação pode substituí-la, e a que falhou fica no
+   * repositório como histórico.
    */
   protected override createContent(input: RecordingInput): RecordedVideo {
     const source = this.repository.findContentById(input.streamId);
