@@ -12,6 +12,13 @@ import type { UserContent } from "./user-content";
 export interface ContentRepository {
   save(content: UserContent): void;
   findContentById(contentId: string): UserContent | undefined;
+  /**
+   * Gravação vigente da transmissão: em processamento ou pronta.
+   *
+   * A gravação `FAILED` continua guardada, como histórico, mas não é devolvida aqui. Se
+   * fosse, a transmissão ficaria presa a ela: o `RecordedVideoCreator` recusaria uma nova
+   * gravação (F2) e o `ClipCreator` recusaria qualquer recorte (F4).
+   */
   findRecordingByStream(streamId: string): RecordedVideo | undefined;
 }
 

@@ -1,4 +1,4 @@
-import { ModerationResult } from "./enums";
+import { ModerationResult, ProcessingStatus } from "./enums";
 import type { ContentRepository, PolicyService } from "./ports";
 import { RecordedVideo } from "./recorded-video";
 import type { UserContent } from "./user-content";
@@ -23,7 +23,11 @@ export class InMemoryContentRepository implements ContentRepository {
 
   findRecordingByStream(streamId: string): RecordedVideo | undefined {
     for (const content of this.contents.values()) {
-      if (content instanceof RecordedVideo && content.sourceStreamId === streamId) {
+      if (
+        content instanceof RecordedVideo &&
+        content.sourceStreamId === streamId &&
+        content.processingStatus !== ProcessingStatus.FAILED
+      ) {
         return content;
       }
     }
