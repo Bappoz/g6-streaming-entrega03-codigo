@@ -34,7 +34,7 @@ Apoio: `enums.ts` (vocabulário do v3), `errors.ts` (`ContentRuleViolationError`
 4. `content.publish()` se a moderação aprovou **e** a mídia está pronta (regra F6); senão, o conteúdo fica registrado e fora do ar, sem erro;
 5. `repository.save(content)` de novo.
 
-Se a política ou o segundo `save` lançar erro, o erro sobe e o conteúdo fica registrado como no primeiro `save`: moderação `PENDING`, fora do ar. É um estado válido do modelo e pode ser moderado de novo pelo id; não há transação, e repetir o `submit` cria outro conteúdo.
+Se a política ou o segundo `save` lançar erro, o erro sobe e o conteúdo fica registrado como no primeiro `save`: moderação `PENDING`, fora do ar. É um estado válido do modelo. Não há transação, e repetir o `submit` tem efeito diferente conforme o tipo: para live e clipe, cria outro conteúdo; para a gravação, é recusado com F2, porque a pendente continua sendo a gravação vigente da transmissão. Em todos os casos, o conteúdo pendente só sai de `PENDING` sendo moderado de novo pelo id, fora do `submit`.
 
 F6 vale enquanto o conteúdo está publicado, não só no instante de publicar: um veredito diferente de `APPROVED` despublica, e `LiveStream.finish()`/`fail()` também.
 
