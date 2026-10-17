@@ -10,7 +10,12 @@ import { RecordedVideoCreator } from "./recorded-video-creator";
 function setup() {
   const repository = new InMemoryContentRepository();
   const policy = new BlocklistPolicyService(repository, []);
-  const creator = new RecordedVideoCreator({ repository, policy, newId: () => "video-1" });
+  let sequence = 0;
+  const creator = new RecordedVideoCreator({
+    repository,
+    policy,
+    newId: () => `video-${++sequence}`,
+  });
   return { repository, creator };
 }
 
@@ -66,6 +71,36 @@ describe("RecordedVideoCreator (ConcreteCreator)", () => {
       "F2 a transmissão live-1 já tem gravação",
     );
     expect(repository.size).toBe(2);
+  });
+
+  it("recusa segunda gravação enquanto a primeira está pronta", () => {
+    const { repository, creator } = setup();
+    repository.save(newLiveStream());
+    const primeira = creator.submit({ streamId: "live-1" });
+    primeira.markReady({
+      durationSeconds: 600,
+      storageUri: "storage://v1",
+      availableAt: new Date(),
+    });
+
+    expect(() => creator.submit({ streamId: "live-1" })).toThrow(
+      "F2 a transmissão live-1 já tem gravação",
+    );
+  });
+
+  it("aceita nova gravação quando a anterior falhou, sem apagar a que falhou", () => {
+    const { repository, creator } = setup();
+    repository.save(newLiveStream());
+    const falhou = creator.submit({ streamId: "live-1" });
+    falhou.markFailed();
+
+    const nova = creator.submit({ streamId: "live-1" });
+
+    expect(nova.id).toBe("video-2");
+    expect(nova.processingStatus).toBe(ProcessingStatus.PROCESSING);
+    expect(repository.findRecordingByStream("live-1")).toBe(nova);
+    expect(repository.findContentById("video-1")).toBe(falhou);
+    expect(falhou.processingStatus).toBe(ProcessingStatus.FAILED);
   });
 
   it("recusa transmissão inexistente com F2", () => {

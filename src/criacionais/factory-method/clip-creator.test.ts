@@ -90,6 +90,22 @@ describe("ClipCreator (ConcreteCreator)", () => {
     expect(() => creator.submit(REQUEST)).toThrow(/^F4 a gravação video-1 ainda não está pronta/);
   });
 
+  it("recorta a gravação que substituiu a que falhou", () => {
+    const { creator, repository } = setup({ ready: false });
+    const falhou = repository.findRecordingByStream("live-1");
+    falhou?.markFailed();
+    expect(() => creator.submit(REQUEST)).toThrow(
+      "F4 a transmissão live-1 não tem gravação para recortar",
+    );
+
+    const live = repository.findContentById("live-1") as LiveStream;
+    const nova = new RecordedVideo({ id: "video-2", createdAt: new Date(), source: live });
+    nova.markReady({ durationSeconds: 600, storageUri: "storage://v2", availableAt: new Date() });
+    repository.save(nova);
+
+    expect(creator.submit(REQUEST).sourceVideoId).toBe("video-2");
+  });
+
   it("recusa recorte fora da gravação com F5, sem persistir o clipe", () => {
     const { creator, repository } = setup();
 
