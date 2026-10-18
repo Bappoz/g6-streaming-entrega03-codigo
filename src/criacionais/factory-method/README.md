@@ -34,7 +34,7 @@ Apoio: `enums.ts` (vocabulário do v3), `errors.ts` (`ContentRuleViolationError`
 4. `content.publish()` se a moderação aprovou **e** a mídia está pronta (regra F6); senão, o conteúdo fica registrado e fora do ar, sem erro;
 5. `repository.save(content)` de novo.
 
-Se a política ou o segundo `save` lançar erro, o erro sobe e o conteúdo fica registrado como no primeiro `save`: moderação `PENDING`, fora do ar. É um estado válido do modelo e pode ser moderado de novo pelo id; não há transação, e repetir o `submit` cria outro conteúdo.
+Se a política ou o segundo `save` lançar erro, o erro sobe e o conteúdo fica registrado como no primeiro `save`: moderação `PENDING`, fora do ar. É um estado válido do modelo. Não há transação, e repetir o `submit` tem efeito diferente conforme o tipo: para live e clipe, cria outro conteúdo; para a gravação, é recusado com F2, porque a pendente continua sendo a gravação vigente da transmissão. Em todos os casos, o conteúdo pendente só sai de `PENDING` sendo moderado de novo pelo id, fora do `submit`.
 
 F6 vale enquanto o conteúdo está publicado, não só no instante de publicar: um veredito diferente de `APPROVED` despublica, e `LiveStream.finish()`/`fail()` também.
 
@@ -47,7 +47,7 @@ Cada mensagem de erro começa pelo id da regra, o elo entre a falha no terminal 
 | Id | Regra | Origem | Onde vive |
 | --- | --- | --- | --- |
 | F1 | Título não vazio | Decisão de projeto (simétrica à R1) | construtor de `UserContent` |
-| F2 | Gravação só nasce de transmissão existente, encerrada (`ENDED`) e com gravação automática; uma gravação por transmissão | Regra 2 da nota "Regras do fluxo de clipes" (v3) e máquina M4 da Entrega 02; unicidade é decisão de projeto | `RecordedVideoCreator` (existência, unicidade) e construtor de `RecordedVideo` |
+| F2 | Gravação só nasce de transmissão existente, encerrada (`ENDED`) e com gravação automática; uma gravação vigente por transmissão (a que falhou não conta e pode ser substituída) | Regra 2 da nota "Regras do fluxo de clipes" (v3) e máquina M4 da Entrega 02; unicidade é decisão de projeto | `RecordedVideoCreator` (existência, unicidade), construtor de `RecordedVideo` e `ContentRepository.findRecordingByStream` (ignora `FAILED`) |
 | F3 | `READY` exige duração, `storageUri` e `availableAt` | Regra 9 (v3), sem o manifesto; duração positiva e data válida são refinamentos | `RecordedVideo.markReady` |
 | F4 | Clipe só nasce de gravação `READY` da transmissão | Regra 1 (v3) | `ClipCreator` (existência) e construtor de `Clip` |
 | F5 | `0 ≤ início < fim ≤ duração da gravação` | Regra 4 (v3) | construtor de `Clip` |
@@ -67,6 +67,7 @@ A regra 7 do v3 (preservar o dono da origem; `createdByUserId` é quem pediu o c
 - **Entrada tipada no método-fábrica.** No GoF, `FactoryMethod()` não recebe parâmetros; aqui cada tipo precisa de entradas diferentes, então o Creator é genérico em `TInput`. É uma adaptação tipada, não a variante de métodos-fábrica parametrizados do GoF (em que o parâmetro escolhe o produto): o parâmetro só carrega dados e quem decide a classe continua sendo a subclasse. Por isso os criadores não são intercambiáveis entre si; o comum é `submit` e o retorno `UserContent`.
 - **Manifesto da gravação.** A regra 9 do v3 também exige manifesto para `READY`; `MediaManifest` (DE08) não é representado, porque a entrega de mídia está fora do escopo do padrão de criação.
 - **Pedido de clipe antes da gravação.** No v3, o `ClipRequest` espera em `WAITING_RECORDING` até o evento `RecordingAvailable` (DE04, DE05). Aqui o pedido sem gravação pronta é recusado com F4: fila e reprocessamento são do `ClipService`, fora do escopo de um padrão de criação.
+- **Perfil de vídeo fora do conteúdo.** O `LiveStreamCreator` copia do `StreamConfig` título, visibilidade, latência e gravação, mas não `resolution`, `framesPerSecond` e `bitrateBps`. A `LiveStream` do v3 não tem esses atributos, e na Entrega 02 o perfil é configurado no encoder do cliente (E06 e E07 do ADR-001): o Builder valida o perfil para essa configuração, não para o conteúdo. Guardar o perfil na live mudaria o diagrama de classes de novo, além da D1.
 - **Construtores públicos.** Como `StreamConfig.fromBuilder` no Builder, nada impede um `new LiveStream(...)` fora do criador; TypeScript não tem visibilidade de pacote. O que o padrão garante é o caminho comum de `submit`; as regras do produto valem nos dois caminhos.
 - **Transições de estado.** `LiveStream` e `RecordedVideo` têm só as transições que a demo usa (`markLive`, `finish`, `fail`, `markReady`, `markFailed`), seguindo as máquinas de estados da Entrega 02.
 

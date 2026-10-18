@@ -45,6 +45,25 @@ describe("InMemoryContentRepository", () => {
     expect(repository.findRecordingByStream("live-1")).toBe(video);
     expect(repository.findRecordingByStream("live-2")).toBeUndefined();
   });
+
+  it("ignora a gravação que falhou e encontra a que a substituiu", () => {
+    const repository = new InMemoryContentRepository();
+    const live = newLiveStream("live-1");
+    live.markLive();
+    live.finish();
+    const falhou = new RecordedVideo({ id: "video-1", createdAt: new Date(), source: live });
+    falhou.markFailed();
+    repository.save(live);
+    repository.save(falhou);
+
+    expect(repository.findRecordingByStream("live-1")).toBeUndefined();
+    expect(repository.findContentById("video-1")).toBe(falhou);
+
+    const nova = new RecordedVideo({ id: "video-2", createdAt: new Date(), source: live });
+    repository.save(nova);
+
+    expect(repository.findRecordingByStream("live-1")).toBe(nova);
+  });
 });
 
 describe("BlocklistPolicyService", () => {

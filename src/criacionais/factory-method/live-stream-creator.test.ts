@@ -10,6 +10,7 @@ import { LiveStreamStatus, ModerationResult } from "./enums";
 import { BlocklistPolicyService, InMemoryContentRepository } from "./in-memory";
 import { LiveStream } from "./live-stream";
 import { LiveStreamCreator } from "./live-stream-creator";
+import type { PolicyService } from "./ports";
 import { UserContentCreator } from "./user-content-creator";
 
 function setup(blockedTerms: readonly string[] = []) {
@@ -61,6 +62,36 @@ describe("LiveStreamCreator (ConcreteCreator)", () => {
     expect(live.moderationStatus).toBe(ModerationResult.APPROVED);
     expect(live.isPublished()).toBe(false);
     expect(repository.findContentById("live-1")).toBe(live);
+  });
+
+  it("cria outra live ao repetir o submit depois de a moderação falhar", () => {
+    const repository = new InMemoryContentRepository();
+    let chamadas = 0;
+    const policy: PolicyService = {
+      moderate: () => {
+        chamadas += 1;
+        if (chamadas === 1) {
+          throw new Error("serviço de moderação indisponível");
+        }
+        return ModerationResult.APPROVED;
+      },
+    };
+    let sequence = 0;
+    const creator = new LiveStreamCreator({
+      repository,
+      policy,
+      newId: () => `live-${++sequence}`,
+    });
+    const config = new StreamConfigDirector(new DefaultStreamConfigBuilder()).mobile("Da rua");
+    const input = { ownerId: "criadora", channelId: "canal-1", config };
+
+    expect(() => creator.submit(input)).toThrow("serviço de moderação");
+    const segunda = creator.submit(input);
+
+    expect(segunda.id).toBe("live-2");
+    expect(segunda.moderationStatus).toBe(ModerationResult.APPROVED);
+    expect(repository.findContentById("live-1")?.moderationStatus).toBe(ModerationResult.PENDING);
+    expect(repository.size).toBe(2);
   });
 
   it("deixa a live recusada pela moderação registrada e fora do ar", () => {
