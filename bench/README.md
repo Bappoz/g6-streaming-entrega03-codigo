@@ -1,6 +1,6 @@
 # Cenários de benchmark (TypeScript)
 
-**Estado:** medidor e cenário do Builder implementados. Cenário do Factory Method pendente (escopo do Matheus).
+**Estado:** medidor e cenários do Builder e do Factory Method implementados.
 
 Ponto de entrada: `bench/run.ts` (`npm run bench`).
 
@@ -37,6 +37,8 @@ A saída é JSON **bruto**, uma amostra por rodada, em `benchmark/resultados/<ce
 ```bash
 node --expose-gc --import tsx bench/isolado.ts builder builder-novo
 node --expose-gc --import tsx bench/isolado.ts builder builder-reutilizado
+node --expose-gc --import tsx bench/isolado.ts factory-method factory-method
+node --expose-gc --import tsx bench/isolado.ts factory-method manual
 ```
 
 O procedimento completo e um exemplo de leitura estão em [`benchmark/relatorio/analise-builder.md`](../benchmark/relatorio/analise-builder.md).
